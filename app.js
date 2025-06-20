@@ -4,6 +4,8 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const authRoutes = require('./src/routes/authRoutes');
 const userRoutes = require('./src/routes/userRoutes');
+const courseRoutes = require('./src/routes/courseRoutes');
+const connectDB = require('./src/config/db');
 
 const app = express();
 dotenv.config();
@@ -17,12 +19,12 @@ app.use(express.json());
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/courses', courseRoutes);
 
-// Connect DB and start server
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => {
-    app.listen(process.env.PORT || 5000, () => {
-      console.log('Server started on port', process.env.PORT || 5000);
-    });
-  })
-  .catch(err => console.log(err));
+// Kết nối DB và khởi động server
+connectDB().then(() => {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`🚀 Server started on port ${PORT}`);
+  });
+}); 
