@@ -37,5 +37,4 @@ router.put(
   courseController.submitCourse
 );
 
-
 module.exports = router;

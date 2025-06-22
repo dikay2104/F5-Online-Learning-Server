@@ -3,7 +3,7 @@ const Course = require('../models/Course');
 const vnpayService = require('../services/vnpayService');
 
 //đăng kí khóa học
-exports.createEnrollment = async (req, res) => {
+const createEnrollment = async (req, res) => {
     const { courseId } = req.body;
     const userId = req.user.id;
 
@@ -51,7 +51,7 @@ exports.createEnrollment = async (req, res) => {
 };
 
 //lấy các khóa học đã đăng kí 
-exports.getMyEnrollments = async (req, res) => {
+const getMyEnrollments = async (req, res) => {
     try {
         const enrollments = await Enrollment.find({
             user: req.user.id,
