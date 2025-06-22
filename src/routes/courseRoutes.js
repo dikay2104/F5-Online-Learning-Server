@@ -30,4 +30,11 @@ router.delete(
   courseController.deleteCourse
 );
 
+router.put(
+  '/:courseId/submit',
+  authMiddleware.verifyToken,
+  authMiddleware.requireRole('teacher', 'admin'),
+  courseController.submitCourse
+);
+
 module.exports = router;
