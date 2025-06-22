@@ -5,7 +5,7 @@ const authMiddleware = require('../middlewares/authMiddleware');
 
 // Public routes: Xem danh sách & chi tiết khoá học
 router.get('/', courseController.getAllCourse);
-router.get('/pagination', courseController.getCoursePagination);
+router.get('/pagination', authMiddleware.verifyToken, courseController.getCoursePagination);
 router.get('/:courseId', courseController.getCourseById);
 
 // Protected routes: Chỉ giáo viên hoặc admin mới được tạo/sửa/xoá
