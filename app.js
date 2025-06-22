@@ -6,6 +6,7 @@ const authRoutes = require('./src/routes/authRoutes');
 const userRoutes = require('./src/routes/userRoutes');
 const courseRoutes = require('./src/routes/courseRoutes');
 const enrollmentRoutes = require('./src/routes/enrollmentRoutes');
+const lessonRoutes = require('./src/routes/lessonRoutes');
 const connectDB = require('./src/config/db');
 
 const app = express();
@@ -23,6 +24,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/enrollments', enrollmentRoutes);
+app.use('/api/lessons', lessonRoutes);
 
 // Kết nối DB và khởi động server
 connectDB().then(() => {
