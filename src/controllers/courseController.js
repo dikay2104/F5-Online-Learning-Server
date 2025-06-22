@@ -104,14 +104,17 @@ exports.deleteCourse = async (req, res) => {
 
 exports.getCoursePagination = async (req, res) => {
     try {
+        const teacherId = req.user.id; // lấy id giáo viên từ middleware
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const status = req.query.status;
         const search = req.query.search || '';
 
         const filter = {
+            teacher: teacherId, // chỉ lấy course của giáo viên hiện tại
             title: { $regex: new RegExp(search, 'i') }
         };
+
         if (status) filter.status = status;
 
         const total = await Course.countDocuments(filter);
@@ -132,3 +135,26 @@ exports.getCoursePagination = async (req, res) => {
         res.status(500).json({ status: 'error', message: err.message });
     }
 };
+
+exports.submitCourse = async (req, res) => {
+  try {
+    const course = await Course.findById(req.params.courseId);
+
+    if (!course) {
+      return res.status(404).json({ status: 'error', message: 'Course not found' });
+    }
+
+    // Kiểm tra quyền: chỉ teacher tạo ra course đó mới được submit
+    if (course.teacher.toString() !== req.user.id) {
+      return res.status(403).json({ status: 'error', message: 'Không có quyền gửi khoá học này' });
+    }
+
+    course.status = 'pending';
+    await course.save();
+
+    res.status(200).json({ status: 'success', message: 'Khoá học đã gửi duyệt', data: course });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+};
+
