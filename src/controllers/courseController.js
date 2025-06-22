@@ -42,23 +42,39 @@ exports.getAllCourse = async (req, res) => {
 };
 
 exports.getCourseById = async (req, res) => {
-    try {
-        const course = await Course.findOne({
-            _id: req.params.courseId,
-            status: 'approved'
-        })
-        .populate('teacher', 'fullName avatar')
-        .populate('lessons', 'title duration');
+  try {
+    const { courseId } = req.params;
 
-        if (!course) {
-            return res.status(404).json({ status: 'error', message: 'Course not found or not approved' });
-        }
-        res.status(200).json({ status: 'success', data: course });
+    const filter = { _id: courseId };
+
+    // Nếu chưa đăng nhập hoặc là student thì chỉ xem được course đã approved
+    if (!req.user || req.user.role === 'student') {
+      filter.status = 'approved';
     }
-    catch (err) {
-        res.status(500).json({ status: 'error', message: err.message });
+
+    const course = await Course.findOne(filter)
+      .populate('teacher', 'fullName avatar')
+      .populate('lessons', 'title duration');
+
+    if (!course) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Khoá học không tồn tại hoặc chưa được duyệt',
+      });
     }
+
+    res.status(200).json({
+      status: 'success',
+      data: course,
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      message: err.message,
+    });
+  }
 };
+
 
 exports.createCourse = async (req, res) => {
     try {
