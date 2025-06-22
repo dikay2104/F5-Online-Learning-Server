@@ -3,25 +3,59 @@ const Course = require('../models/Course');
 exports.getAllCourse = async (req, res) => {
     try {
         const search = req.query.search || '';
-        const regex = new RegExp(search, 'i'); // không phân biệt hoa thường
-        const courses = await Course.find({ title: { $regex: regex } })
-            .populate('teacher');
-        res.status(200).json({ status: 'success', data: courses });
-    } catch (err) {
+        const category = req.query.category || '';
+        const level = req.query.level || '';
+        const price = req.query.price || '';
+
+        const regex = new RegExp(search, 'i')
+        const filter ={
+            status: 'approved',
+            title: { $regex: regex }
+        };
+        if (category) {
+            filter.category = category;
+        }
+        if (level) {
+            filter.level = level;
+        }
+        if (price === 'free'){
+            filter.price = 0;
+        }
+        else if (price === 'paid') {
+            filter.price = { $gt: 0};
+        }
+
+        const courses = await Course.find(filter)
+            .populate('teacher', 'fullName avatar')
+            .select('title description price thumbnail level category duration studentsCount createdAt')
+            .sort({ createdAt: -1 });
+
+        res.status(200).json({
+            status: 'success',
+            data: courses,
+            total: courses.length
+        });
+    }
+    catch (err) {
         res.status(500).json({ status: 'error', message: err.message });
     }
 };
 
 exports.getCourseById = async (req, res) => {
     try {
-        const course = await Course.findById(req.params.courseId)
-            .populate('teacher')
-            .populate('lessons');
+        const course = await Course.findOne({
+            _id: req.params.courseId,
+            status: 'approved'
+        })
+        .populate('teacher', 'fullName avatar')
+        .populate('lessons', 'title duration');
+
         if (!course) {
-            return res.status(404).json({ status: 'error', message: 'Course not found' });
+            return res.status(404).json({ status: 'error', message: 'Course not found or not approved' });
         }
         res.status(200).json({ status: 'success', data: course });
-    } catch (err) {
+    }
+    catch (err) {
         res.status(500).json({ status: 'error', message: err.message });
     }
 };

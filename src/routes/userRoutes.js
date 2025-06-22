@@ -6,7 +6,7 @@ const authMiddleware = require('../middlewares/authMiddleware');
 //---- Router tĩnh -----
 // [GET] /api/users/profile - yêu cầu token
 router.get('/profile/me', authMiddleware.verifyToken, userController.getCurrentUserProfile);
-
+router.put('/profile', authMiddleware.verifyToken, userController.updateUserProfile);
 // [GET] test middleware
 router.get('/admin-data', authMiddleware.verifyToken, authMiddleware.requireRole('admin'), (req, res) => {
   res.json({ message: 'Chào admin!' });
