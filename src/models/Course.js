@@ -9,7 +9,7 @@ const courseSchema = new mongoose.Schema({
   category: { type: String, default: 'programming' },
   duration: Number, // Thời lượng khóa học (phút)
   studentsCount: { type: Number, default: 0 }, // Số học viên đã đăng ký
-  status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+  status: { type: String, enum: ['draft', 'pending', 'approved', 'rejected'], default: 'draft' },
   teacher: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   lessons: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Lesson' }],
   createdAt: { type: Date, default: Date.now }
