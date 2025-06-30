@@ -1,16 +1,16 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const dotenv = require('dotenv');
 const authRoutes = require('./src/routes/authRoutes');
 const userRoutes = require('./src/routes/userRoutes');
 const courseRoutes = require('./src/routes/courseRoutes');
 const enrollmentRoutes = require('./src/routes/enrollmentRoutes');
 const lessonRoutes = require('./src/routes/lessonRoutes');
+const uploadRoutes = require('./src/routes/uploadRoutes');
 const connectDB = require('./src/config/db');
 
 const app = express();
-dotenv.config();
 
 console.log('MONGO_URI:', process.env.MONGO_URI);
 
@@ -25,6 +25,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/enrollments', enrollmentRoutes);
 app.use('/api/lessons', lessonRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // Kết nối DB và khởi động server
 connectDB().then(() => {
