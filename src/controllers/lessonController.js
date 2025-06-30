@@ -40,6 +40,13 @@ exports.createLesson = async (req, res) => {
     });
 
     await lesson.save();
+
+    // Cập nhật mảng lessons trong Course
+    await Course.findByIdAndUpdate(course, {
+      $push: { lessons: lesson._id }
+    });
+
+    // Cập nhật tổng thời lượng khóa học
     await updateCourseDuration(course);
 
     res.status(201).json({ status: 'success', data: lesson });
