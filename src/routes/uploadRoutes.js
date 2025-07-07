@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const uploadController = require('../controllers/uploadController');
 const authMiddleware = require('../middlewares/authMiddleware');
-const { upload } = require('../services/cloudinary');
+const { upload } = require('../services/cloudinaryService');
 
 router.post(
   '/thumbnail',
