@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { sendVerificationCode } = require('../services/emailService');
 
 exports.register = async (req, res) => {
   const { fullName, email, password, role } = req.body;
@@ -36,3 +37,14 @@ exports.login = async (req, res) => {
     res.status(500).json({ message: 'Login failed', error: err.message });
   }
 };
+
+exports.sendCode = async (req, res) => {
+  const { email } = req.body;
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+  req.session = req.session || {};
+  req.session[email] = code;
+
+  await sendVerificationCode(email, code);
+  res.json({ message: 'Verification code sent' });
+}
