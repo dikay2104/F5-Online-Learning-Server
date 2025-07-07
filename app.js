@@ -8,6 +8,7 @@ const courseRoutes = require('./src/routes/courseRoutes');
 const enrollmentRoutes = require('./src/routes/enrollmentRoutes');
 const lessonRoutes = require('./src/routes/lessonRoutes');
 const uploadRoutes = require('./src/routes/uploadRoutes');
+const feedbackRoutes = require('./src/routes/feedbackRoutes');
 const connectDB = require('./src/config/db');
 
 const app = express();
@@ -26,10 +27,11 @@ app.use('/api/courses', courseRoutes);
 app.use('/api/enrollments', enrollmentRoutes);
 app.use('/api/lessons', lessonRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/feedbacks', feedbackRoutes);
 
 // Kết nối DB và khởi động server
 connectDB().then(() => {
-  const PORT = process.env.PORT || 5000;
+  const PORT = process.env.PORT || 3001;
   app.listen(PORT, () => {
     console.log(`🚀 Server started on port ${PORT}`);
   });
