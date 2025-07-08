@@ -90,3 +90,84 @@ exports.updateUserProfile = async (req, res) => {
     res.status(500).json({ message: 'Error updating user profile', error: err.message });
   }
 };
+
+// Lấy danh sách tất cả user (phân trang, tìm kiếm, lọc)
+exports.getAllUsers = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, search = '', role, isActive } = req.query;
+    const query = {};
+
+    // Tìm kiếm theo tên hoặc email
+    if (search) {
+      query.$or = [
+        { fullName: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } }
+      ];
+    }
+    // Lọc theo role
+    if (role) {
+      query.role = role;
+    }
+    // Lọc theo trạng thái hoạt động
+    if (isActive !== undefined) {
+      query.isActive = isActive === 'true';
+    }
+
+    const users = await User.find(query)
+      .select('-password')
+      .skip((page - 1) * limit)
+      .limit(Number(limit))
+      .sort({ createdAt: -1 });
+
+    const total = await User.countDocuments(query);
+
+    res.json({
+      users,
+      total,
+      page: Number(page),
+      totalPages: Math.ceil(total / limit)
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching users', error: err.message });
+  }
+};
+
+// Ban user - chỉ admin
+exports.banUser = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    // Không cho phép admin tự ban chính mình
+    if (req.user.id === userId) {
+      return res.status(400).json({ message: 'Bạn không thể tự ban chính mình!' });
+    }
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { isActive: false },
+      { new: true }
+    ).select('-password');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json({ message: 'User đã bị ban thành công', user });
+  } catch (err) {
+    res.status(500).json({ message: 'Ban user failed', error: err.message });
+  }
+};
+
+// Unban user - chỉ admin
+exports.unbanUser = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { isActive: true },
+      { new: true }
+    ).select('-password');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json({ message: 'User đã được mở khóa thành công', user });
+  } catch (err) {
+    res.status(500).json({ message: 'Unban user failed', error: err.message });
+  }
+};
