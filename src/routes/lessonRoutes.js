@@ -23,6 +23,13 @@ router.post(
 );
 
 router.put(
+  '/reorder',
+  authMiddleware.verifyToken,
+  authMiddleware.requireRole('teacher', 'admin'),
+  lessonController.reorderLessons
+);
+
+router.put(
   '/:lessonId',
   authMiddleware.verifyToken,
   authMiddleware.requireRole('teacher', 'admin'),
