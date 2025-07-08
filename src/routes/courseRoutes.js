@@ -17,17 +17,9 @@ router.put('/:courseId/reject', authMiddleware.verifyToken, authMiddleware.requi
 
 
 // Public routes: Xem danh sách & chi tiết khoá học
-router.get("/", courseController.getAllCourse);
-router.get(
-  "/pagination",
-  authMiddleware.verifyToken,
-  courseController.getCoursePagination
-);
-router.get(
-  "/:courseId",
-  authMiddleware.verifyToken,
-  courseController.getCourseById
-);
+router.get('/', courseController.getAllCourse);
+router.get('/pagination', authMiddleware.verifyToken, courseController.getCoursePagination);
+router.get('/:courseId', courseController.getCourseById);
 
 // Protected routes: Chỉ giáo viên hoặc admin mới được tạo/sửa/xoá
 router.post(
