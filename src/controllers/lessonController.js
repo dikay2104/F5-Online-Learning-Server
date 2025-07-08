@@ -147,3 +147,19 @@ exports.getLessonPagination = async (req, res) => {
     res.status(500).json({ status: 'error', message: err.message });
   }
 };
+
+exports.reorderLessons = async (req, res) => {
+  try {
+    const updates = req.body; // [{ lessonId, order }]
+    const bulkOps = updates.map(({ lessonId, order }) => ({
+      updateOne: {
+        filter: { _id: lessonId },
+        update: { $set: { order } }
+      }
+    }));
+    await Lesson.bulkWrite(bulkOps);
+    res.status(200).json({ status: 'success', message: 'Thứ tự bài học đã được cập nhật' });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+};

@@ -173,3 +173,73 @@ exports.submitCourse = async (req, res) => {
     res.status(500).json({ status: 'error', message: err.message });
   }
 };
+
+// Lấy danh sách khóa học chờ phê duyệt (chỉ admin)
+exports.getPendingCourses = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, search = '', teacher } = req.query;
+    const query = { status: 'pending' };
+    // Tìm kiếm theo tiêu đề
+    if (search) {
+      query.title = { $regex: search, $options: 'i' };
+    }
+    // Lọc theo teacher
+    if (teacher) {
+      query.teacher = teacher;
+    }
+    const courses = await Course.find(query)
+      .populate('teacher', 'fullName email')
+      .skip((page - 1) * limit)
+      .limit(Number(limit))
+      .sort({ createdAt: -1 });
+    const total = await Course.countDocuments(query);
+    res.json({
+      courses,
+      total,
+      page: Number(page),
+      totalPages: Math.ceil(total / limit)
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching pending courses', error: err.message });
+  }
+};
+
+// Phê duyệt khóa học - chỉ admin
+exports.approveCourse = async (req, res) => {
+  try {
+    const courseId = req.params.courseId;
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+    if (course.status !== 'pending') {
+      return res.status(400).json({ message: 'Chỉ có thể phê duyệt khóa học ở trạng thái pending' });
+    }
+    course.status = 'approved';
+    await course.save();
+    res.json({ message: 'Khóa học đã được phê duyệt thành công', course });
+  } catch (err) {
+    res.status(500).json({ message: 'Approve course failed', error: err.message });
+  }
+};
+
+// Từ chối khóa học - chỉ admin
+exports.rejectCourse = async (req, res) => {
+  try {
+    const courseId = req.params.courseId;
+    const { reason } = req.body;
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+    if (course.status !== 'pending') {
+      return res.status(400).json({ message: 'Chỉ có thể từ chối khóa học ở trạng thái pending' });
+    }
+    course.status = 'rejected';
+    course.rejectReason = reason || '';
+    await course.save();
+    res.json({ message: 'Khóa học đã bị từ chối', course });
+  } catch (err) {
+    res.status(500).json({ message: 'Reject course failed', error: err.message });
+  }
+};
