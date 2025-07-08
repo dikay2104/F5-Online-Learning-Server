@@ -15,5 +15,6 @@ router.get('/me', enrollmentController.getMyEnrollments);
 //thanh toán
 router.post('/payment', enrollmentController.createPayment);
 router.get('/payment/callback', enrollmentController.handlePaymentCallback);
+router.post('/confirm', enrollmentController.confirmEnrollment);
 
 module.exports = router;
