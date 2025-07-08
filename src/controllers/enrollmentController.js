@@ -160,6 +160,7 @@ const handlePaymentCallback = async (req, res) => {
             return res.status(404).json({ message: 'Transaction not found' });
         }
 
+        const wasActive = enrollment.status === 'active';
         if (responseCode === '00') {
             //thanh toán thành công 
             enrollment.status = 'active';
@@ -168,11 +169,13 @@ const handlePaymentCallback = async (req, res) => {
             enrollment.payment.completedAt = new Date();
             await enrollment.save();
 
-            //tăng số học viên của khóa học
-            await Course.findByIdAndUpdate(
-                enrollment.course._id,
-                { $inc: { studentsCount: 1 } }
-            );
+            //tăng số học viên của khóa học chỉ khi trước đó chưa active
+            if (!wasActive) {
+                await Course.findByIdAndUpdate(
+                    enrollment.course._id,
+                    { $inc: { studentsCount: 1 } }
+                );
+            }
             
             res.json({
                 message: 'Payment successful',
@@ -196,9 +199,42 @@ const handlePaymentCallback = async (req, res) => {
     }
 };
 
+const confirmEnrollment = async (req, res) => {
+  try {
+    const { orderId } = req.body;
+    console.log('FE gửi orderId:', orderId);
+    const enrollment = await Enrollment.findOne({ 'payment.orderId': orderId });
+    if (!enrollment) {
+      console.log('Không tìm thấy enrollment với orderId:', orderId);
+      return res.status(404).json({ message: 'Enrollment not found', orderId });
+    }
+    if (enrollment.status === 'active') {
+      console.log('Enrollment đã active:', enrollment._id);
+      return res.json({ message: 'Already active' });
+    }
+    enrollment.status = 'active';
+    enrollment.payment.status = 'completed';
+    enrollment.payment.completedAt = new Date();
+    await enrollment.save();
+
+    // Tăng số học viên CHỈ khi trước đó chưa active
+    await Course.findByIdAndUpdate(
+      enrollment.course,
+      { $inc: { studentsCount: 1 } }
+    );
+
+    console.log('Xác nhận enrollment thành công:', enrollment._id);
+    res.json({ message: 'Enrollment confirmed' });
+  } catch (err) {
+    console.error('Lỗi xác nhận enrollment:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
 module.exports = {
     createEnrollment,
     getMyEnrollments,
     createPayment, 
-    handlePaymentCallback
+    handlePaymentCallback,
+    confirmEnrollment
 };
