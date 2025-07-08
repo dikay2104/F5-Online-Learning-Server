@@ -1,6 +1,6 @@
 const Lesson = require('../models/Lesson');
 const Course = require('../models/Course');
-const { Innertube } = require('youtubei');
+const { Innertube } = require('youtubei.js');
 
 // Lấy videoId từ YouTube URL
 const getVideoId = (url) => {
