@@ -142,7 +142,7 @@ exports.banUser = async (req, res) => {
     }
     const user = await User.findByIdAndUpdate(
       userId,
-      { isActive: false },
+      { isActive: false, isBanned: true },
       { new: true }
     ).select('-password');
     if (!user) {
@@ -160,7 +160,7 @@ exports.unbanUser = async (req, res) => {
     const userId = req.params.id;
     const user = await User.findByIdAndUpdate(
       userId,
-      { isActive: true },
+      { isActive: true, isBanned: false }, 
       { new: true }
     ).select('-password');
     if (!user) {
