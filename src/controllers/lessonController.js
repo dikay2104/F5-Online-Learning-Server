@@ -1,5 +1,6 @@
 const Lesson = require('../models/Lesson');
 const Course = require('../models/Course');
+const Collection = require('../models/Collection');
 const { Innertube } = require('youtubei.js');
 
 // Lấy videoId từ YouTube URL
@@ -15,6 +16,14 @@ const updateCourseDuration = async (courseId) => {
   const totalDuration = lessons.reduce((sum, l) => sum + (l.videoDuration || 0), 0);
   await Course.findByIdAndUpdate(courseId, { duration: Math.floor(totalDuration / 60) }); // phút
 };
+
+const updateCollectionDuration = async (collectionId) => {
+  if (!collectionId) return;
+
+  const lessons= await Lesson.find({ collection: collectionId });
+  const totalDuration = lessons.reduce((sum, l) => sum + (l.videoDuration || 0), 0);
+  await Collection.findByIdAndUpdate(collectionId, { duration: Math.floor(totalDuration / 60) });
+}
 
 exports.createLesson = async (req, res) => {
   try {
@@ -49,6 +58,18 @@ exports.createLesson = async (req, res) => {
 
     // Cập nhật tổng thời lượng khóa học
     await updateCourseDuration(course);
+
+    // Gắn lesson vào collection nếu có
+    if (collection) {
+      await Collection.findByIdAndUpdate(collection, {
+        $push: { lessons: lesson._id }
+      });
+    }
+
+    // Cập nhật thời lượng collection nếu có
+    if (collection) {
+      await updateCollectionDuration(collection);
+    }
 
     res.status(201).json({ status: 'success', data: lesson });
   } catch (err) {
@@ -97,6 +118,29 @@ exports.updateLesson = async (req, res) => {
     const updatedLesson = await Lesson.findByIdAndUpdate(lessonId, updates, { new: true });
     await updateCourseDuration(updatedLesson.course);
 
+    // Cập nhật thời lượng cho collection cũ và mới nếu có thay đổi
+    const oldCollection = lesson.collection?.toString();
+    const newCollection = updates.collection?.toString();
+    
+    if (oldCollection !== newCollection) {
+      if (oldCollection) await updateCollectionDuration(oldCollection);
+      if (newCollection) await updateCollectionDuration(newCollection);
+    } else if (newCollection) {
+      await updateCollectionDuration(newCollection);
+    }
+
+    // Nếu collection thay đổi thì di chuyển lesson
+    if (oldCollection && oldCollection !== newCollection) {
+      await Collection.findByIdAndUpdate(oldCollection, {
+        $pull: { lessons: lesson._id }
+      });
+    }
+    if (updates.hasOwnProperty('collection') && updates.collection === null && lesson.collection) {
+      await Collection.findByIdAndUpdate(lesson.collection, {
+        $pull: { lessons: lesson._id }
+      });
+    }
+
     res.status(200).json({ status: 'success', data: updatedLesson });
   } catch (err) {
     res.status(500).json({ status: 'error', message: err.message });
@@ -109,6 +153,19 @@ exports.deleteLesson = async (req, res) => {
     if (!lesson) return res.status(404).json({ status: 'error', message: 'Lesson không tồn tại' });
 
     await updateCourseDuration(lesson.course);
+
+    // Gỡ khỏi Course
+    await Course.findByIdAndUpdate(lesson.course, {
+      $pull: { lessons: lesson._id }
+    });
+
+    // Cập nhật collection nếu có
+    if (lesson.collection) {
+      await updateCollectionDuration(lesson.collection);
+      await Collection.findByIdAndUpdate(lesson.collection, {
+        $pull: { lessons: lesson._id }
+      });
+    }
     res.status(200).json({ status: 'success', message: 'Lesson đã xoá', data: lesson });
   } catch (err) {
     res.status(500).json({ status: 'error', message: err.message });
