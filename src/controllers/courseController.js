@@ -54,7 +54,7 @@ exports.getCourseById = async (req, res) => {
 
     const course = await Course.findOne(filter)
       .populate('teacher', 'fullName avatar')
-      .populate('lessons', 'title duration');
+      .populate('lessons', 'title videoDuration');
 
     if (!course) {
       return res.status(404).json({

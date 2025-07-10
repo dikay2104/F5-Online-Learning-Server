@@ -4,7 +4,7 @@ const lessonController = require('../controllers/lessonController');
 const authMiddleware = require('../middlewares/authMiddleware');
 
 // Public routes
-router.get('/course/:courseId', lessonController.getLessonsByCourse); // xem tất cả bài học trong 1 khóa
+router.get('/course/:courseId', authMiddleware.verifyToken, lessonController.getLessonsByCourse); // chỉ user đã đăng nhập mới xem được bài học
 router.get('/:lessonId', lessonController.getLessonById);             // xem chi tiết 1 bài học
 
 // Protected routes: Chỉ giáo viên hoặc admin mới được thao tác
