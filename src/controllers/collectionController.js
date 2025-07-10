@@ -22,6 +22,11 @@ exports.createCollection = async (req, res) => {
 
     await collection.save();
 
+    // Gắn collection vào Course
+    await Course.findByIdAndUpdate(course, {
+      $push: { collections: collection._id }
+    });
+
     res.status(201).json({ status: 'success', data: collection });
   } catch (err) {
     res.status(500).json({ status: 'error', message: err.message });

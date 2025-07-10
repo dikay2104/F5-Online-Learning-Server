@@ -5,6 +5,7 @@ const collectionSchema = new mongoose.Schema({
   description: { type: String, default: "" }, // Mô tả ngắn nếu cần
   order: { type: Number, default: 0 }, // Thứ tự hiển thị trong khóa học
   course: { type: mongoose.Schema.Types.ObjectId, ref: 'Course', required: true },
+  duration: Number, // Thời lượng collection (phút)
   lessons: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Lesson' }]
 }, { timestamps: true });
 
