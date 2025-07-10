@@ -8,7 +8,8 @@ const lessonSchema = new mongoose.Schema({
   order: Number, // Thứ tự của bài học trong khoá
   isPreviewable: { type: Boolean, default: false }, // Cho phép học thử?
   resources: [String], // Tài liệu kèm theo (PDF, link, v.v.)
-  course: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' }
+  course: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' },
+  collection: { type: mongoose.Schema.Types.ObjectId, ref: 'Collection' }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Lesson', lessonSchema);

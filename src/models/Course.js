@@ -21,6 +21,7 @@ const courseSchema = new mongoose.Schema({
   rejectReason: { type: String, default: "" },
   teacher: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   lessons: [{ type: mongoose.Schema.Types.ObjectId, ref: "Lesson" }],
+  collections: [{ type: mongoose.Schema.Types.ObjectId, ref: "Collection" }],
   createdAt: { type: Date, default: Date.now },
 });
 
