@@ -18,7 +18,7 @@ const updateCourseDuration = async (courseId) => {
 
 exports.createLesson = async (req, res) => {
   try {
-    const { title, description, videoUrl, order, isPreviewable, resources, course } = req.body;
+    const { title, description, videoUrl, order, isPreviewable, resources, course, collection } = req.body;
     const videoId = getVideoId(videoUrl);
 
     if (!videoId) {
@@ -36,7 +36,8 @@ exports.createLesson = async (req, res) => {
       order,
       isPreviewable,
       resources,
-      course
+      course,
+      collection
     });
 
     await lesson.save();
