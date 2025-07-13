@@ -8,8 +8,7 @@ exports.getAllCourse = async (req, res) => {
         const price = req.query.price || '';
 
         const regex = new RegExp(search, 'i')
-        const filter ={
-            status: 'approved',
+        const filter = {
             title: { $regex: regex }
         };
         if (category) {
@@ -27,7 +26,7 @@ exports.getAllCourse = async (req, res) => {
 
         const courses = await Course.find(filter)
             .populate('teacher', 'fullName avatar')
-            .select('title description price thumbnail level category duration studentsCount createdAt')
+            .select('title description price thumbnail level category duration studentsCount createdAt status')
             .sort({ createdAt: -1 });
 
         res.status(200).json({
