@@ -2,6 +2,7 @@ const Lesson = require('../models/Lesson');
 const Course = require('../models/Course');
 const Collection = require('../models/Collection');
 const { Innertube } = require('youtubei.js');
+const Progress = require('../models/Progress');
 
 // Lấy videoId từ YouTube URL
 const getVideoId = (url) => {
@@ -217,6 +218,38 @@ exports.reorderLessons = async (req, res) => {
     }));
     await Lesson.bulkWrite(bulkOps);
     res.status(200).json({ status: 'success', message: 'Thứ tự bài học đã được cập nhật' });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+};
+
+// Lưu tiến độ xem video
+exports.saveProgress = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { lessonId } = req.params;
+    const { watchedSeconds, videoDuration, courseId } = req.body;
+    if (!lessonId || watchedSeconds == null || !courseId) {
+      return res.status(400).json({ message: 'Thiếu dữ liệu' });
+    }
+    const progress = await Progress.findOneAndUpdate(
+      { user: userId, lesson: lessonId },
+      { watchedSeconds, videoDuration, course: courseId, updatedAt: new Date() },
+      { upsert: true, new: true }
+    );
+    res.json({ status: 'success', data: progress });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+};
+
+// Lấy tiến độ các bài học trong khoá học
+exports.getProgressByCourse = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { courseId } = req.params;
+    const progresses = await Progress.find({ user: userId, course: courseId });
+    res.json({ status: 'success', data: progresses });
   } catch (err) {
     res.status(500).json({ status: 'error', message: err.message });
   }

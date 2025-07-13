@@ -43,4 +43,8 @@ router.delete(
   lessonController.deleteLesson
 );
 
+// Progress routes
+router.post('/:lessonId/progress', authMiddleware.verifyToken, lessonController.saveProgress);
+router.get('/course/:courseId/progress', authMiddleware.verifyToken, lessonController.getProgressByCourse);
+
 module.exports = router;
