@@ -12,4 +12,11 @@ router.post(
   uploadController.uploadThumbnail
 );
 
+router.post(
+  '/avatar',
+  authMiddleware.verifyToken,
+  upload.single('file'),
+  uploadController.uploadAvatar
+);
+
 module.exports = router;
