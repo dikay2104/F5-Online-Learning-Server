@@ -3,7 +3,10 @@ const router = express.Router();
 const feedbackController = require("../controllers/feedbackController");
 const authMiddleware = require("../middlewares/authMiddleware");
 
-// Lấy danh sách tất cả feedback 
+// Cho phép public lấy feedbacks theo course (nếu có query course)
+router.get("/", feedbackController.getAllFeedbacks);
+
+// Lấy danh sách tất cả feedback (admin)
 router.get(
   "/",
   authMiddleware.verifyToken,
@@ -25,6 +28,14 @@ router.post(
   authMiddleware.verifyToken,
   authMiddleware.requireRole("admin"),
   feedbackController.replyFeedback
+);
+
+// Student gửi feedback
+router.post(
+  "/",
+  authMiddleware.verifyToken,
+  authMiddleware.requireRole("student"),
+  feedbackController.createFeedback
 );
 
 module.exports = router;
