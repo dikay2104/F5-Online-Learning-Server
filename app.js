@@ -20,6 +20,7 @@ const lessonRoutes = require('./src/routes/lessonRoutes');
 const uploadRoutes = require('./src/routes/uploadRoutes');
 const feedbackRoutes = require('./src/routes/feedbackRoutes');
 const collectionRoutes = require('./src/routes/collectionRoutes');
+const progressRoutes = require('./src/routes/progressRoutes');
 const driveRoutes = require('./src/routes/driveRoutes');
 const connectDB = require('./src/config/db');
 
@@ -41,6 +42,7 @@ app.use('/api/lessons', lessonRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/feedbacks', feedbackRoutes);
 app.use('/api/collections', collectionRoutes);
+app.use('/api/progress', progressRoutes);
 app.use('/api/drive', driveRoutes);
 
 // Kết nối DB và khởi động server
