@@ -3,6 +3,7 @@ const Course = require('../models/Course');
 const Collection = require('../models/Collection');
 const { Innertube } = require('youtubei.js');
 const Progress = require('../models/Progress');
+const { getVideoDurationFromUrl } = require('../utils/videoUtils');
 
 // Lấy videoId từ YouTube URL
 const getVideoId = (url) => {
@@ -28,47 +29,51 @@ const updateCollectionDuration = async (collectionId) => {
 
 exports.createLesson = async (req, res) => {
   try {
-    const { title, description, videoUrl, order, isPreviewable, resources, course, collection } = req.body;
-    const videoId = getVideoId(videoUrl);
-
-    if (!videoId) {
-      return res.status(400).json({ status: 'error', message: 'Video URL không hợp lệ' });
-    }
-
-    const youtube = await Innertube.create();
-    const info = await youtube.getInfo(videoId);
-
-    const lesson = new Lesson({
+    const {
       title,
       description,
       videoUrl,
-      videoDuration: info.basic_info.duration, // giây
       order,
       isPreviewable,
       resources,
       course,
       collection
+    } = req.body;
+
+    let videoDuration = await getVideoDurationFromUrl(videoUrl);
+
+    // Kiểm tra nếu là YouTube link thì mới lấy duration
+    // const videoId = getVideoId(videoUrl);
+    // if (videoId) {
+    //   try {
+    //     const youtube = await Innertube.create();
+    //     const info = await youtube.getInfo(videoId);
+    //     videoDuration = info.basic_info.duration;
+    //   } catch (err) {
+    //     console.warn('Không lấy được duration từ YouTube:', err.message);
+    //     // Không throw lỗi, tiếp tục tạo lesson mà không có duration
+    //   }
+    // }
+
+    const lesson = new Lesson({
+      title,
+      description,
+      videoUrl,
+      videoDuration,
+      order,
+      isPreviewable,
+      resources,
+      course,
+      collection,
     });
 
     await lesson.save();
 
-    // Cập nhật mảng lessons trong Course
-    await Course.findByIdAndUpdate(course, {
-      $push: { lessons: lesson._id }
-    });
-
-    // Cập nhật tổng thời lượng khóa học
+    await Course.findByIdAndUpdate(course, { $push: { lessons: lesson._id } });
     await updateCourseDuration(course);
 
-    // Gắn lesson vào collection nếu có
     if (collection) {
-      await Collection.findByIdAndUpdate(collection, {
-        $push: { lessons: lesson._id }
-      });
-    }
-
-    // Cập nhật thời lượng collection nếu có
-    if (collection) {
+      await Collection.findByIdAndUpdate(collection, { $push: { lessons: lesson._id } });
       await updateCollectionDuration(collection);
     }
 
@@ -77,6 +82,8 @@ exports.createLesson = async (req, res) => {
     res.status(500).json({ status: 'error', message: err.message });
   }
 };
+
+
 
 exports.getLessonsByCourse = async (req, res) => {
   try {
@@ -107,13 +114,8 @@ exports.updateLesson = async (req, res) => {
 
     // Nếu videoUrl thay đổi thì lấy lại thời lượng mới
     if (updates.videoUrl && updates.videoUrl !== lesson.videoUrl) {
-      const videoId = getVideoId(updates.videoUrl);
-      if (!videoId) {
-        return res.status(400).json({ status: 'error', message: 'Video URL không hợp lệ' });
-      }
-      const youtube = await Innertube.create();
-      const info = await youtube.getInfo(videoId);
-      updates.videoDuration = info.basic_info.duration;
+      const newDuration = await getVideoDurationFromUrl(updates.videoUrl);
+      updates.videoDuration = newDuration;
     }
 
     const updatedLesson = await Lesson.findByIdAndUpdate(lessonId, updates, { new: true });
