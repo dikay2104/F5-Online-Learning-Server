@@ -2,6 +2,16 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
+
+// Ensure uploads folder exists
+const uploadDir = path.join(__dirname, 'src', 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+  console.log('📁 Created uploads folder at:', uploadDir);
+}
+
 const authRoutes = require('./src/routes/authRoutes');
 const userRoutes = require('./src/routes/userRoutes');
 const courseRoutes = require('./src/routes/courseRoutes');
@@ -10,6 +20,7 @@ const lessonRoutes = require('./src/routes/lessonRoutes');
 const uploadRoutes = require('./src/routes/uploadRoutes');
 const feedbackRoutes = require('./src/routes/feedbackRoutes');
 const collectionRoutes = require('./src/routes/collectionRoutes');
+const driveRoutes = require('./src/routes/driveRoutes');
 const connectDB = require('./src/config/db');
 
 const app = express();
@@ -30,6 +41,7 @@ app.use('/api/lessons', lessonRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/feedbacks', feedbackRoutes);
 app.use('/api/collections', collectionRoutes);
+app.use('/api/drive', driveRoutes);
 
 // Kết nối DB và khởi động server
 connectDB().then(() => {
@@ -37,4 +49,4 @@ connectDB().then(() => {
   app.listen(PORT, () => {
     console.log(`🚀 Server started on port ${PORT}`);
   });
-}); 
+});
