@@ -1,22 +1,27 @@
-// src/routes/driveRoutes.js
 const express = require('express');
 const multer = require('multer');
-const path = require('path');
-const { uploadDrive } = require('../controllers/driveController');
+const { uploadFileToDrive } = require('../controllers/driveController');
+const fs = require('fs');
 
 const router = express.Router();
+const upload = multer({ dest: 'uploads/' });
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, '../uploads'));
-  },
-  filename: function (req, file, cb) {
-    cb(null, `${Date.now()}-${file.originalname}`);
-  },
+router.post('/upload', upload.single('video'), async (req, res) => {
+  try {
+    const filePath = req.file.path;
+    const fileName = req.file.originalname;
+    const mimeType = req.file.mimetype;
+
+    const result = await uploadFileToDrive(filePath, fileName, mimeType);
+
+    // Xoá file local sau khi upload
+    fs.unlinkSync(filePath);
+
+    res.json({ link: result.previewLink });
+  } catch (err) {
+    console.error('Upload failed:', err);
+    res.status(500).json({ message: 'Upload failed', error: err.message });
+  }
 });
-
-const upload = multer({ storage });
-
-router.post('/upload', upload.single('video'), uploadDrive);
 
 module.exports = router;

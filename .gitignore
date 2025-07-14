@@ -32,6 +32,9 @@ coverage/
 # Environment variables
 .env
 
+#Drive variables
+config/apikeys.json
+
 # Miscellaneous
 .DS_Store
 Thumbs.db
