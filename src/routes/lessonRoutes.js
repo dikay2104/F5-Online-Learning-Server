@@ -4,10 +4,10 @@ const lessonController = require('../controllers/lessonController');
 const authMiddleware = require('../middlewares/authMiddleware');
 
 // Public routes
-router.get('/course/:courseId', authMiddleware.verifyToken, lessonController.getLessonsByCourse); // chỉ user đã đăng nhập mới xem được bài học
-router.get('/:lessonId', lessonController.getLessonById);             // xem chi tiết 1 bài học
+router.get('/course/:courseId', authMiddleware.verifyToken, lessonController.getLessonsByCourse);
+router.get('/:lessonId', lessonController.getLessonById);
 
-// Protected routes: Chỉ giáo viên hoặc admin mới được thao tác
+// Protected routes
 router.get(
   '/',
   authMiddleware.verifyToken,
@@ -43,7 +43,7 @@ router.delete(
   lessonController.deleteLesson
 );
 
-// Progress routes
+// Progress
 router.post('/:lessonId/progress', authMiddleware.verifyToken, lessonController.saveProgress);
 router.get('/course/:courseId/progress', authMiddleware.verifyToken, lessonController.getProgressByCourse);
 
