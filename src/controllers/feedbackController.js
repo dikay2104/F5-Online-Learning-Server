@@ -86,4 +86,29 @@ exports.replyFeedback = async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: 'Reply feedback failed', error: err.message });
   }
+};
+
+// Student gửi feedback
+exports.createFeedback = async (req, res) => {
+  try {
+    const { course, comment, rating } = req.body;
+    if (!course || !comment || !rating) {
+      return res.status(400).json({ message: 'Thiếu thông tin feedback' });
+    }
+    // Kiểm tra đã từng gửi feedback chưa (1 user chỉ gửi 1 feedback/khóa học)
+    const existed = await Feedback.findOne({ course, student: req.user.id });
+    if (existed) {
+      return res.status(400).json({ message: 'Bạn đã gửi feedback cho khóa học này rồi' });
+    }
+    const feedback = new Feedback({
+      course,
+      student: req.user.id,
+      comment,
+      rating
+    });
+    await feedback.save();
+    res.status(201).json({ message: 'Gửi feedback thành công', feedback });
+  } catch (err) {
+    res.status(500).json({ message: 'Gửi feedback thất bại', error: err.message });
+  }
 };  
