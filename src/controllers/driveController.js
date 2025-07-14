@@ -1,25 +1,65 @@
-// src/controllers/driveController.js
-const { uploadVideoToDrive } = require('../services/googleDriveService');
-const path = require('path');
 const fs = require('fs');
+const path = require('path');
+const { google } = require('googleapis');
 
-const uploadDrive = async (req, res) => {
-  try {
-    const file = req.file;
-    if (!file) return res.status(400).json({ success: false, message: 'No file uploaded' });
+const SCOPES = ['https://www.googleapis.com/auth/drive'];
 
-    const filePath = path.join(__dirname, '..', 'uploads', file.filename);
-    const folderId = '1YYE2e2iPTZVg96q5b2mzy8cUF-z9Urfr'; // folder Google Drive của bạn
+// Đường dẫn đến file apikeys.json (có thể chỉnh nếu bạn đặt file chỗ khác)
+const KEY_FILE_PATH = path.join(__dirname, '../config/apikeys.json');
 
-    const viewLink = await uploadVideoToDrive(filePath, file.originalname, folderId);
+async function authorize() {
+  const auth = new google.auth.GoogleAuth({
+    keyFile: KEY_FILE_PATH,
+    scopes: SCOPES,
+  });
+  return await auth.getClient();
+}
 
-    fs.unlinkSync(filePath); // xóa file local sau khi upload
+async function uploadFileToDrive(localFilePath, fileName, mimeType) {
+  const auth = await authorize();
+  const drive = google.drive({ version: 'v3', auth });
 
-    res.json({ success: true, link: viewLink });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: 'Upload failed' });
-  }
+  // Đọc folderId và sharedDriveId từ file apikeys.json nếu bạn không muốn dùng biến môi trường
+  const credentials = JSON.parse(fs.readFileSync(KEY_FILE_PATH, 'utf8'));
+
+  // 👉 Nếu bạn vẫn muốn dùng .env để tách biệt ID folder và shared drive:
+  const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
+  const sharedDriveId = process.env.GOOGLE_SHARED_DRIVE_ID;
+
+  const fileMetadata = {
+    name: fileName,
+    parents: [folderId],
+  };
+
+  const media = {
+    mimeType,
+    body: fs.createReadStream(localFilePath),
+  };
+
+  const response = await drive.files.create({
+    resource: fileMetadata,
+    media,
+    fields: 'id',
+    supportsAllDrives: true,
+    driveId: sharedDriveId,
+  });
+
+  const fileId = response.data.id;
+
+  // // Cấp quyền public
+  // await drive.permissions.create({
+  //   fileId,
+  //   requestBody: {
+  //     role: 'reader',
+  //     type: 'anyone',
+  //   },
+  //   supportsAllDrives: true,
+  // });
+
+  const previewLink = `https://drive.google.com/file/d/${fileId}/preview`;
+  return { fileId, previewLink };
+}
+
+module.exports = {
+  uploadFileToDrive,
 };
-
-module.exports = { uploadDrive };
