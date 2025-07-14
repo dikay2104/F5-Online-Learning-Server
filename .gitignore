@@ -33,7 +33,7 @@ coverage/
 .env
 
 #Drive variables
-config/apikeys.json
+src/config/apikeys.json
 
 # Miscellaneous
 .DS_Store
