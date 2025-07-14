@@ -59,7 +59,7 @@ const getMyEnrollments = async (req, res) => {
         })
         .populate({
             path: 'course',
-            select: 'title thumbnail description'
+            select: 'title thumbnail description duration price studentsCount level category'
         });
         res.status(200).json({ data: enrollments });
     } catch (err) {
@@ -216,12 +216,6 @@ const confirmEnrollment = async (req, res) => {
     enrollment.payment.status = 'completed';
     enrollment.payment.completedAt = new Date();
     await enrollment.save();
-
-    // Tăng số học viên CHỈ khi trước đó chưa active
-    await Course.findByIdAndUpdate(
-      enrollment.course,
-      { $inc: { studentsCount: 1 } }
-    );
 
     console.log('Xác nhận enrollment thành công:', enrollment._id);
     res.json({ message: 'Enrollment confirmed' });
