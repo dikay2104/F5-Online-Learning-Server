@@ -8,14 +8,26 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_CLOUD_SECRET
 });
 
-const storage = new CloudinaryStorage({
+// Cấu hình storage cho video
+const videoStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'videos',
+    resource_type: 'video', // QUAN TRỌNG: để Cloudinary xử lý như file video
+    allowed_formats: ['mp4', 'mov', 'webm'],
+  }
+});
+
+const imageStorage = new CloudinaryStorage({
   cloudinary,
   params: {
     folder: 'thumbnails',
+    resource_type: 'image',
     allowed_formats: ['jpg', 'png', 'jpeg'],
   }
 });
 
-const upload = multer({ storage });
+const uploadImage = multer({ storage: imageStorage });
+const uploadVideo = multer({ storage: videoStorage });
 
-module.exports = { upload, cloudinary };
+module.exports = { uploadImage, uploadVideo, cloudinary };
