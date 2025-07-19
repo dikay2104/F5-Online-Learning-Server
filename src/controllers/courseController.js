@@ -1,4 +1,6 @@
 const Course = require('../models/Course');
+const Notification = require('../models/Notification');
+const User = require('../models/User');
 
 exports.getAllCourse = async (req, res) => {
     try {
@@ -84,6 +86,7 @@ exports.createCourse = async (req, res) => {
       });
   
       await course.save();
+
       res.status(201).json({ status: 'success', data: course });
     } catch (err) {
       res.status(400).json({ status: 'error', message: err.message });
@@ -167,6 +170,27 @@ exports.submitCourse = async (req, res) => {
     course.status = 'pending';
     await course.save();
 
+    // Gửi thông báo cho admin
+    const admins = await User.find({ role: 'admin' });
+    const actor = await User.findById(req.user.id);
+
+    const notifications = admins.map(admin => ({
+      recipient: admin._id,
+      actor: req.user.id,
+      type: 'course_submitted',
+      message: `${actor.fullName} đã gửi khoá học "${course.title}" để duyệt.`,
+      targetRef: course._id,
+    }));
+
+    await Notification.insertMany(notifications);
+
+    admins.forEach(admin => {
+      req.io.to(admin._id.toString()).emit('new_notification', {
+        type: 'course_submitted',
+        message: `${actor.fullName} đã gửi khoá học "${course.title}" để duyệt.`,
+      });
+    });
+
     res.status(200).json({ status: 'success', message: 'Khoá học đã gửi duyệt', data: course });
   } catch (err) {
     res.status(500).json({ status: 'error', message: err.message });
@@ -216,6 +240,20 @@ exports.approveCourse = async (req, res) => {
     }
     course.status = 'approved';
     await course.save();
+
+    await Notification.create({
+      recipient: course.teacher,
+      actor: req.user.id,
+      type: 'course_approved',
+      message: `Khoá học "${course.title}" của bạn đã được phê duyệt.`,
+      targetRef: course._id
+    });
+
+    req.io.to(course.teacher.toString()).emit('new_notification', {
+      type: 'course_approved',
+      message: `Khoá học "${course.title}" của bạn đã được phê duyệt.`,
+    });
+
     res.json({ message: 'Khóa học đã được phê duyệt thành công', course });
   } catch (err) {
     res.status(500).json({ message: 'Approve course failed', error: err.message });
@@ -237,6 +275,20 @@ exports.rejectCourse = async (req, res) => {
     course.status = 'rejected';
     course.rejectReason = reason || '';
     await course.save();
+
+    await Notification.create({
+      recipient: course.teacher,
+      actor: req.user.id,
+      type: 'course_rejected',
+      message: `Khoá học "${course.title}" đã bị từ chối. Lý do: ${reason}`,
+      targetRef: course._id
+    });
+
+    req.io.to(course.teacher.toString()).emit('new_notification', {
+      type: 'course_rejected',
+      message: `Khoá học "${course.title}" đã bị từ chối. Lý do: ${reason}`,
+    });
+
     res.json({ message: 'Khóa học đã bị từ chối', course });
   } catch (err) {
     res.status(500).json({ message: 'Reject course failed', error: err.message });
