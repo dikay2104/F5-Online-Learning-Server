@@ -160,23 +160,25 @@ const handlePaymentCallback = async (req, res) => {
             return res.status(404).json({ message: 'Transaction not found' });
         }
 
-        const wasActive = enrollment.status === 'active';
         if (responseCode === '00') {
-            //thanh toán thành công 
-            enrollment.status = 'active';
-            enrollment.payment.status = 'completed';
-            enrollment.payment.transactionNo = transactionNo;
-            enrollment.payment.completedAt = new Date();
-            await enrollment.save();
-
-            //tăng số học viên của khóa học chỉ khi trước đó chưa active
-            if (!wasActive) {
-                await Course.findByIdAndUpdate(
-                    enrollment.course._id,
-                    { $inc: { studentsCount: 1 } }
-                );
+            // Chỉ update và tăng studentsCount nếu trạng thái chưa active (atomic)
+            const updated = await Enrollment.findOneAndUpdate(
+              { 'payment.orderId': orderId, status: { $ne: 'active' } },
+              {
+                $set: {
+                  status: 'active',
+                  'payment.status': 'completed',
+                  'payment.transactionNo': transactionNo,
+                  'payment.completedAt': new Date()
+                }
+              }
+            );
+            if (updated) {
+              await Course.findByIdAndUpdate(
+                enrollment.course._id,
+                { $inc: { studentsCount: 1 } }
+              );
             }
-            
             res.json({
                 message: 'Payment successful',
                 enrollmentId: enrollment._id
@@ -212,11 +214,12 @@ const confirmEnrollment = async (req, res) => {
       console.log('Enrollment đã active:', enrollment._id);
       return res.json({ message: 'Already active' });
     }
+    // Chỉ tăng số học viên khi chuyển từ chưa active sang active
     enrollment.status = 'active';
     enrollment.payment.status = 'completed';
     enrollment.payment.completedAt = new Date();
     await enrollment.save();
-
+    await Course.findByIdAndUpdate(enrollment.course, { $inc: { studentsCount: 1 } });
     console.log('Xác nhận enrollment thành công:', enrollment._id);
     res.json({ message: 'Enrollment confirmed' });
   } catch (err) {
