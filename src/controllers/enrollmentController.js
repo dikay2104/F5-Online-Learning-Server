@@ -214,12 +214,23 @@ const confirmEnrollment = async (req, res) => {
       console.log('Enrollment đã active:', enrollment._id);
       return res.json({ message: 'Already active' });
     }
-    // Chỉ tăng số học viên khi chuyển từ chưa active sang active
-    enrollment.status = 'active';
-    enrollment.payment.status = 'completed';
-    enrollment.payment.completedAt = new Date();
-    await enrollment.save();
-    await Course.findByIdAndUpdate(enrollment.course, { $inc: { studentsCount: 1 } });
+    // Chỉ update và tăng studentsCount nếu trạng thái chưa active (atomic)
+    const updated = await Enrollment.findOneAndUpdate(
+      { 'payment.orderId': orderId, status: { $ne: 'active' } },
+      {
+        $set: {
+          status: 'active',
+          'payment.status': 'completed',
+          'payment.completedAt': new Date()
+        }
+      }
+    );
+    if (updated) {
+      await Course.findByIdAndUpdate(
+        enrollment.course,
+        { $inc: { studentsCount: 1 } }
+      );
+    }
     console.log('Xác nhận enrollment thành công:', enrollment._id);
     res.json({ message: 'Enrollment confirmed' });
   } catch (err) {
