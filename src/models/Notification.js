@@ -12,6 +12,8 @@ const notificationSchema = new mongoose.Schema({
       'course_rejected',
       'course_submitted',
       'admin_notice',
+      'feedback_created',
+      'feedback_replied',
     ],
     required: true
   },

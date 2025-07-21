@@ -1,6 +1,7 @@
 const Feedback = require('../models/Feedback');
 const User = require('../models/User');
 const Course = require('../models/Course');
+const Notification = require('../models/Notification');
 
 // Lấy danh sách tất cả feedback (phân trang, tìm kiếm, lọc)
 exports.getAllFeedbacks = async (req, res) => {
@@ -82,6 +83,22 @@ exports.replyFeedback = async (req, res) => {
       return res.status(404).json({ message: 'Feedback not found' });
     }
     feedback = await feedback.populate('reply.admin', 'fullName email');
+
+    // Gửi thông báo cho học viên
+    await Notification.create({
+      recipient: feedback.student,
+      actor: req.user.id,
+      type: 'feedback_replied',
+      message: `Phản hồi từ giáo viên cho feedback của bạn trong khoá học "${feedback.course}".`,
+      targetRef: feedback.course,
+      targetModel: 'Course'
+    });
+
+    req.io?.to(feedback.student.toString()).emit('new_notification', {
+      type: 'feedback_replied',
+      message: `Phản hồi từ giáo viên cho feedback của bạn trong khoá học "${feedback.course}".`,
+    });
+    
     res.json({ message: 'Reply feedback thành công', feedback });
   } catch (err) {
     res.status(500).json({ message: 'Reply feedback failed', error: err.message });
@@ -107,6 +124,25 @@ exports.createFeedback = async (req, res) => {
       rating
     });
     await feedback.save();
+
+    // Gửi thông báo cho giáo viên
+    const courseInfo = await Course.findById(course).populate('teacher');
+    const actor = await User.findById(req.user.id);
+    await Notification.create({
+      recipient: courseInfo.teacher._id,
+      actor: req.user.id,
+      type: 'feedback_created',
+      message: `${actor.fullName} đã gửi feedback cho khoá học "${courseInfo.title}".`,
+      targetRef: courseInfo._id,
+      targetModel: 'Course'
+    });
+
+    // Gửi realtime nếu cần
+    req.io?.to(courseInfo.teacher._id.toString()).emit('new_notification', {
+      type: 'feedback_created',
+      message: `${req.user.fullName} đã gửi feedback cho khoá học "${courseInfo.title}".`,
+    });
+
     res.status(201).json({ message: 'Gửi feedback thành công', feedback });
   } catch (err) {
     res.status(500).json({ message: 'Gửi feedback thất bại', error: err.message });

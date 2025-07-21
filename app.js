@@ -26,6 +26,7 @@ const commentRoutes = require('./src/routes/commentRoutes');
 const progressRoutes = require('./src/routes/progressRoutes');
 const driveRoutes = require('./src/routes/driveRoutes');
 const notificationRoutes = require('./src/routes/notificationRoutes');
+const statisticsRoutes  = require('./src/routes/teacherStatsRoutes');
 const connectDB = require('./src/config/db');
 
 const app = express();
@@ -61,7 +62,7 @@ app.use('/api/comments', commentRoutes);
 app.use('/api/progress', progressRoutes);
 app.use('/api/drive', driveRoutes);
 app.use('/api/notifications', notificationRoutes);
-
+app.use('/api/statistics', statisticsRoutes);
 
 // Kết nối Socket.IO
 io.on('connection', (socket) => {
