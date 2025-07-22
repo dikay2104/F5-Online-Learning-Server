@@ -2,6 +2,7 @@ const User = require('../models/User');
 const Course = require('../models/Course');
 const Lesson = require('../models/Lesson');
 const Feedback = require('../models/Feedback');
+const Enrollment = require('../models/Enrollment');
 
 exports.getAdminSummary = async (req, res) => {
   try {
@@ -35,5 +36,23 @@ exports.getAdminSummary = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ message: 'Error fetching admin summary', error: err.message });
+  }
+};
+
+exports.getMonthlyRevenue = async (req, res) => {
+  try {
+    const revenue = await Enrollment.aggregate([
+      { $match: { status: 'active', 'payment.status': 'completed' } },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m", date: "$payment.completedAt" } },
+          total: { $sum: "$payment.amount" }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+    res.json(revenue.map(r => ({ month: r._id, revenue: r.total })));
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching monthly revenue', error: err.message });
   }
 };
