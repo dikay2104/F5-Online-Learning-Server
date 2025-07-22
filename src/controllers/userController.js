@@ -160,8 +160,8 @@ exports.unbanUser = async (req, res) => {
     const userId = req.params.id;
     const user = await User.findByIdAndUpdate(
       userId,
-      { isActive: true, isBanned: false }, 
-      { new: true }
+      { isActive:   true, isBanned: false }, 
+      { new: true } 
     ).select('-password');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
