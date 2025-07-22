@@ -4,6 +4,6 @@ const authMiddleware = require('../middlewares/authMiddleware');
 
 const router = express.Router();
 
-router.get('/teacher', authMiddleware.verifyToken, authMiddleware.requireRole("teacher"), getTeacherStatistics);
+router.get('/teacher', authMiddleware.verifyToken, getTeacherStatistics);
 
 module.exports = router;
