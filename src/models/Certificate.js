@@ -11,6 +11,7 @@ const certificateSchema = new mongoose.Schema({
   fullName: { type: String }, // Tên học viên (dùng để render chứng chỉ)
   courseTitle: { type: String }, // Tên khóa học (dùng để render chứng chỉ)
   extra: { type: Object }, // Thông tin bổ sung (nếu cần)
+  allowEditName: { type: Boolean, default: true }, // Chỉ cho phép đổi tên 1 lần
 });
 
 module.exports = mongoose.model('Certificate', certificateSchema); 
