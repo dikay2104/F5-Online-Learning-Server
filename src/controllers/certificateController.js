@@ -73,4 +73,27 @@ exports.getCertificateById = async (req, res) => {
   } catch (err) {
     res.status(500).json({ status: 'error', message: err.message });
   }
+};
+
+// Cho phép user đổi tên trên chứng chỉ (chỉ 1 lần)
+exports.editCertificateName = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { certificateId } = req.params;
+    const { newName } = req.body;
+    if (!newName || newName.trim().length < 2) {
+      return res.status(400).json({ status: 'error', message: 'Tên không hợp lệ.' });
+    }
+    const cert = await Certificate.findOne({ certificateId, user: userId });
+    if (!cert) return res.status(404).json({ status: 'error', message: 'Không tìm thấy chứng chỉ' });
+    if (!cert.allowEditName) {
+      return res.status(400).json({ status: 'error', message: 'Bạn chỉ được đổi tên 1 lần.' });
+    }
+    cert.fullName = newName.trim();
+    cert.allowEditName = false;
+    await cert.save();
+    res.json({ status: 'success', data: cert, message: 'Đã đổi tên trên chứng chỉ thành công.' });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
 }; 
