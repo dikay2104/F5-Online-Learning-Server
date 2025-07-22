@@ -96,7 +96,7 @@ exports.getTeacherStatistics = async (req, res) => {
       topCourses
     };
 
-    console.log("Statistic data:", response);
+    // console.log("Statistic data:", response);
 
     res.json(response);
   } catch (err) {
