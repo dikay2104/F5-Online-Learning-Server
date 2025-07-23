@@ -4,13 +4,13 @@ const { Innertube } = require('youtubei.js');
 const cloudinary = require('cloudinary').v2;
 
 // Đọc cấu hình Cloudinary từ apikeys.json (hoặc từ env)
-const KEY_FILE_PATH = path.join(__dirname, '../config/apikeys.json');
-const credentials = JSON.parse(fs.readFileSync(KEY_FILE_PATH, 'utf8'));
+// const KEY_FILE_PATH = path.join(__dirname, '../config/apikeys.json');
+// const credentials = JSON.parse(fs.readFileSync(KEY_FILE_PATH, 'utf8'));
 
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || credentials.cloudinary_cloud_name,
-  api_key: process.env.CLOUDINARY_CLOUD_API || credentials.cloudinary_cloud_api,
-  api_secret: process.env.CLOUDINARY_CLOUD_SECRET || credentials.cloudinary_cloud_secret,
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_CLOUD_API,
+  api_secret: process.env.CLOUDINARY_CLOUD_SECRET
 });
 
 // Extract YouTube videoId
