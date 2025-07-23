@@ -1,7 +1,7 @@
 const path = require('path');
 const fs = require('fs');
-const ytdl = require('ytdl-core');
 const cloudinary = require('cloudinary').v2;
+const axios = require('axios');
 
 // Đọc cấu hình Cloudinary từ apikeys.json (hoặc từ env)
 // const KEY_FILE_PATH = path.join(__dirname, '../config/apikeys.json');
@@ -64,14 +64,38 @@ async function getCloudinaryVideoDuration(url) {
   }
 }
 
-// YouTube duration using ytdl-core
+// Chuyển ISO 8601 duration (VD: PT4M13S) sang giây
+function convertISODurationToSeconds(duration) {
+  const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  const hours = parseInt(match?.[1] || 0);
+  const minutes = parseInt(match?.[2] || 0);
+  const seconds = parseInt(match?.[3] || 0);
+  return hours * 3600 + minutes * 60 + seconds;
+}
+
 async function getYoutubeVideoDuration(videoId) {
   try {
-    const info = await ytdl.getInfo(videoId);
-    const durationSeconds = parseInt(info.videoDetails.lengthSeconds, 10);
-    return durationSeconds || null;
+    const apiKey = process.env.YOUTUBE_API_KEY;
+    const response = await axios.get('https://www.googleapis.com/youtube/v3/videos', {
+      params: {
+        id: videoId,
+        part: 'contentDetails',
+        key: apiKey
+      }
+    });
+
+    const items = response.data.items;
+    if (!items || items.length === 0) {
+      console.warn('⚠️ Không tìm thấy video trên YouTube API');
+      return null;
+    }
+
+    const duration = items[0].contentDetails.duration; // ISO 8601
+    const seconds = convertISODurationToSeconds(duration);
+    console.log(`[YouTube] Thời lượng: ${seconds}s`);
+    return seconds;
   } catch (err) {
-    console.warn('❌ Lỗi lấy thời lượng YouTube bằng ytdl-core:', err.message);
+    console.warn('❌ Lỗi YouTube Data API:', err.message);
     return null;
   }
 }
