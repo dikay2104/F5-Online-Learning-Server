@@ -1,6 +1,6 @@
 const path = require('path');
 const fs = require('fs');
-const { Innertube } = require('youtubei.js');
+const ytdl = require('ytdl-core');
 const cloudinary = require('cloudinary').v2;
 
 // Đọc cấu hình Cloudinary từ apikeys.json (hoặc từ env)
@@ -64,6 +64,18 @@ async function getCloudinaryVideoDuration(url) {
   }
 }
 
+// YouTube duration using ytdl-core
+async function getYoutubeVideoDuration(videoId) {
+  try {
+    const info = await ytdl.getInfo(videoId);
+    const durationSeconds = parseInt(info.videoDetails.lengthSeconds, 10);
+    return durationSeconds || null;
+  } catch (err) {
+    console.warn('❌ Lỗi lấy thời lượng YouTube bằng ytdl-core:', err.message);
+    return null;
+  }
+}
+
 // Lấy duration từ video URL (Cloudinary hoặc YouTube)
 async function getVideoDurationFromUrl(url) {
   console.log('[Duration] Đang xử lý URL:', url);
@@ -75,16 +87,8 @@ async function getVideoDurationFromUrl(url) {
 
   const videoId = getVideoId(url);
   if (videoId) {
-    try {
-      console.log('[Duration] Phát hiện là video YouTube với ID:', videoId);
-      const youtube = await Innertube.create();
-      const info = await youtube.getInfo(videoId);
-      console.log('[YouTube] Metadata:', info.basic_info);
-      return info.basic_info.duration;
-    } catch (err) {
-      console.warn('❌ Lỗi lấy thời lượng YouTube:', err.message);
-      return null;
-    }
+    console.log('[Duration] Phát hiện là video YouTube với ID:', videoId);
+    return await getYoutubeVideoDuration(videoId);
   }
 
   console.warn('[Duration] Không xác định được loại video URL');
