@@ -30,7 +30,6 @@
     "qs": "^6.14.0",
     "socket.io": "^4.8.1",
     "youtubei": "^1.6.7",
-    "youtubei.js": "^14.0.0",
     "ytdl-core": "^4.11.5"
   }
 }
