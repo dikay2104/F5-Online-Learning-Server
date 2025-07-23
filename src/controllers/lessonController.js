@@ -1,7 +1,6 @@
 const Lesson = require('../models/Lesson');
 const Course = require('../models/Course');
 const Collection = require('../models/Collection');
-const { Innertube } = require('youtubei.js');
 const Progress = require('../models/Progress');
 const { getVideoDurationFromUrl } = require('../utils/videoUtils');
 
