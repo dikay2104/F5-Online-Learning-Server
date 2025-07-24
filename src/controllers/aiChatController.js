@@ -4,7 +4,7 @@ const fetch = require('node-fetch');
 const API_KEY = process.env.AI_API_KEY || "sk-C4wNtPDOw2GmaZMf4723A75f58Cd48139b1477CeE40f0867";
 const BASE_URL = "https://api.sv2.llm.ai.vn/v1/chat/completions";
 const MODEL_NAME = "openai:gpt-4.1";
-const DOMAIN = 'http://localhost:3000';
+const DOMAIN = 'https://f5-online-learning-server.onrender.com';
 
 function isCourseQuery(message) {
   const keywords = [
